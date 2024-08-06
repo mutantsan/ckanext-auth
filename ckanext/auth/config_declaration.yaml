@@ -1,0 +1,11 @@
+version: 1
+groups:
+  - annotation: ckanext-auth
+    options:
+      - key: ckanext.auth.2fa_enabled
+        default: true
+        description: Enable two-factor authentication for users
+
+      - key: ckanext.auth.2fa_method
+        default: email
+        description: The method to use for two-factor authentication. Options are email or auth_app.

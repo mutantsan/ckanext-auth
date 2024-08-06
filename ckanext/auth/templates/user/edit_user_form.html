@@ -1,0 +1,14 @@
+{% ckan_extends %}
+
+{% block extra_fields %}
+    {{ super() }}
+
+    {% if h.is_totp_login_enabled() %}
+        <fieldset class="form-group">
+            <legend>{{_('Two factor authentication')}}</legend>
+            <a href="{{ h.url_for('auth.configure_2fa', user_id=data.name )}}" class="btn btn-primary">
+                {{ _('Manage 2FA') }}
+            </a>
+        </fieldset>
+    {% endif %}
+{% endblock %}

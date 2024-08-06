@@ -1,0 +1,94 @@
+{#
+    Altered login form that includes the 2FA authentication.
+#}
+
+{% import 'macros/form.html' as form %}
+
+{% set username_error = true if error_summary %}
+{% set password_error = true if error_summary %}
+{% set is_2fa_enabled = h.is_2fa_enabled() %}
+
+<form
+    id="mfa-login-form" action="{{ action }}" method="post"
+    data-module="auth-login-form"
+    data-module-enabled="{{ h.is_2fa_enabled() | tojson }}"
+    data-module-mfa-method="{{ h.get_2fa_method() }}">
+    {{ h.csrf_input() }}
+    {{ form.errors(errors=error_summary) }}
+
+    <div class="error-explanation alert alert-error" style="display: none;">
+        <p id="invalid-entries">{{ _('The form contains invalid entries:') }}</p>
+        <ul>
+            <li id="login-error" data-field-label>{{ _('Login failed. Incorrect username or password.') }}</li>
+            <li id="mfa-error" data-field-label>{{ _('Invalid code, please try again.') }}</li>
+            <li id="unknown-error" data-field-label>{{ _('An unknown error occurred.') }}</li>
+        </ul>
+    </div>
+
+    <div id="login-form">
+        {{ form.input('login', label=_("Username or Email"), id='field-login', value="", error=username_error, classes=["control-medium"]) }}
+
+        {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"]) }}
+
+        {{ form.checkbox('remember', label=_("Remember me"), id='field-remember', checked=true, value="63072000") }}
+
+        {% if g.recaptcha_publickey %}
+            {% snippet "user/snippets/recaptcha.html", public_key=g.recaptcha_publickey %}
+        {% endif %}
+
+        <div class="form-actions">
+            {% block login_button %}
+                <button class="btn btn-primary" type="submit">
+                    {{ _('Next') if is_2fa_enabled else _('Login') }}
+                </button>
+            {% endblock %}
+        </div>
+    </div>
+
+    {% if is_2fa_enabled %}
+        <input id="mfa-type" name="mfa_type" type="hidden" value="{{ h.get_2fa_method() }}" />
+
+        {% if h.is_totp_2fa_enabled() %}
+            <div id="mfa-form" style="display: none;">
+                <fieldset id="mfa-setup" style="display: none;">
+                    <legend>{{_('Scan this QR code with your two factor authentication app')}}</legend>
+                    <p>{% trans %}If you don't already have an authenticator app, you could try Google Authenticator.{% endtrans %}</p>
+
+                    <div>
+                        <canvas class="radius-lg padding-sm margin-b-sm border-solid" data-module="auth-qr-render"></canvas>
+                    </div>
+
+                    <p>
+                        {%- trans -%}If you are not able to scan the QR code, you can manually enter this secret into your
+                        authenticator app: {%- endtrans -%}<code id="totp-secret"></code>
+                    </p>
+                </fieldset>
+
+                <p>{{_('Please enter your authenticator app generated 6-digit verification code.')}}</p>
+                {{ form.input('mfa', label=_("Verification code"), id='field-mfa', type="text", value="", error=mfa_error,
+                classes=["control-medium"], attrs={"autocomplete": "off", 'class': 'form-control', 'required': 1}) }}
+
+                <input id="mfa-form-active" name="mfa-form-active" type="hidden" value="" />
+                <div class="form-actions">
+                    <a id="mfa-help-link" href="/" style="display: none; margin-right: 20px;">{{_('Need help?')}}</a>
+                    <button class="btn btn-primary" id="mfa-submit">{{ _('Submit') }}</button>
+                </div>
+            </div>
+        {% else %}
+            <div id="mfa-form" style="display: none;">
+                <p>{{ _("We've just sent a verification code to your email.") }}</p>
+
+                {{ form.input('mfa', label=_("Verification code"), id='field-mfa', type="text", value="", error=mfa_error,
+                classes=["control-medium"], attrs={"autocomplete": "off", 'class': 'form-control', 'required': 1}) }}
+
+                <p>{{ _("Didn't get it?") }} <a id="resend-mfa" href="#">{{ _("Resend code") }}</a></p>
+
+                <input id="mfa-form-active" name="mfa-form-active" type="hidden" value="" />
+                <div class="form-actions">
+                    <a id="mfa-help-link" href="/" style="display: none; margin-right: 20px;">{{_('Need help?')}}</a>
+                    <button class="btn btn-primary" id="mfa-submit">{{ _('Submit') }}</button>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</form>

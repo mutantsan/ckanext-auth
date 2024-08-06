@@ -1,0 +1,18 @@
+auth-js:
+  filter: rjsmin
+  output: ckanext-auth/%(version)s-auth.js
+  contents:
+    - js/vendor/QRious.min.js
+
+    - js/auth-login-form.js
+    - js/auth-qr-render.js
+
+  extra:
+    preload:
+      - base/main
+
+auth-css:
+  filter: cssrewrite
+  output: ckanext-auth/%(version)s-auth.css
+  contents:
+    - css/style.css

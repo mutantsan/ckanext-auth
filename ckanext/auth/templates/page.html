@@ -1,0 +1,11 @@
+{% ckan_extends %}
+
+{% block styles %}
+    {{ super() }}
+    {% asset "auth/auth-css" %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {% asset "auth/auth-js" %}
+{% endblock %}

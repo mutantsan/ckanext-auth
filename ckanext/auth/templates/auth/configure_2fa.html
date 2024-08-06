@@ -1,0 +1,67 @@
+{% extends 'page.html' %}
+
+{% import 'macros/form.html' as form %}
+
+{% block subtitle %}{{ _('Manage 2FA') }}{% endblock %}
+
+{% block breadcrumb_content %}
+    <li><a href="{{ h.url_for('user.index') }}">{{ _('Users') }}</a></li>
+    <li><a href="{{ h.url_for('user.read', id=user_dict.name) }}">{{ user_dict.display_name }}</a></li>
+    <li class="active"><a href="#">{{ _('Manage 2FA') }}</a></li>
+{% endblock %}
+
+{% block secondary_content %}
+    <section class="module module-narrow module-shallow">
+        <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('Manage 2FA') }}</h2>
+        <div class="module-content">
+            <p>
+                {%- trans -%}
+                    Scan the image with the two factor authentication app on your phone.
+                {%- endtrans -%}
+            </p>
+
+            <p>
+                <b>{{ _("Test") }}</b>:
+                {{ _("Enter the two factor authentication code from your app to test correct configuration.") }}
+            </p>
+            <p>
+                <b>{{ _("Regenerate secret") }}</b>:
+                {{ _("You might need it if you lost an access to your 2FA device or want to setup another one.") }}
+            </p>
+        </div>
+    </section>
+{% endblock %}
+
+{% block page_header %} {% endblock %}
+
+{% block primary_content_inner %}
+    <form id="mfa-form" method="POST">
+        <fieldset>
+
+            <div class="auth-qr-code-container align-items-center d-flex">
+                <canvas class="radius-lg padding-sm margin-b-sm border-solid" data-module="auth-qr-render" data-module-value="{{ totp_challenger_uri }}"></canvas>
+                <div>
+                    <h3>{{_('Scan this QR code with your 2FA app')}}</h3>
+
+                    <p>
+                        {% trans %}If you are not able to scan the QR code, you can manually enter this secret into your
+                        authenticator app:{% endtrans %} <code id="totp-secret">{{ totp_secret }}</code>
+                    </p>
+                </div>
+            </div>
+
+            {{ form.input('mfa', id='field-mfa', label=_('2FA Code'), placeholder=_('eg. 203812'), value="", error=not mfa_test_valid, classes=['control-full', 'control-large'], attrs={'class': 'form-control', 'autocomplete': 'off'}) }}
+        </fieldset>
+
+        <div class="form-actions">
+            <a class="btn btn-default m-0 me-auto" href="{{ h.url_for('user.read', id=user_dict.name) }}">{{ _("Back") }}</a>
+
+            <a class="btn btn-danger" href="{{ h.url_for('auth.regenerate_secret', user_id=user_id) }}" data-module="confirm-action"
+                data-module-i18n="{{ h.dump_json({'content': _('Are you sure you want to generate a new 2FA secret?')}) }}">
+                {{ _('Regenerate 2FA secret') }}
+            </a>
+
+            <button class="btn btn-primary" type="submit">{{_('Test')}}</button>
+        </div>
+    </form>
+{% endblock %}
