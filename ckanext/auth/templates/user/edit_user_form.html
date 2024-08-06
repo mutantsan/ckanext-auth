@@ -3,7 +3,7 @@
 {% block extra_fields %}
     {{ super() }}
 
-    {% if h.is_totp_login_enabled() %}
+    {% if h.is_totp_2fa_enabled() %}
         <fieldset class="form-group">
             <legend>{{_('Two factor authentication')}}</legend>
             <a href="{{ h.url_for('auth.configure_2fa', user_id=data.name )}}" class="btn btn-primary">

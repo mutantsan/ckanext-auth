@@ -107,8 +107,6 @@ class UserSecret(tk.BaseModel):
             )
             result = totp.verify(code)
 
-        log.debug(result)
-
         if result and not verify_only:
             # check for replay attack...
             if self.last_access and totp.at(cast(dt, self.last_access)) == code:

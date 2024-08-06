@@ -8,6 +8,9 @@ There are two methods of 2FA available:
 - TOTP (Time-based One-Time Password) with authenticator apps like Google Authenticator, Authy, etc.
 - Email
 
+TODO:
+- Finish the TOTP method implementation
+
 
 ## Requirements
 

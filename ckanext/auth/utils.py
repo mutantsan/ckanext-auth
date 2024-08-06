@@ -24,8 +24,6 @@ def send_verification_email_to_user(user_id: str) -> bool:
 
     code = get_email_verification_code(user)
 
-    log.debug(f"2FA: {code}")
-
     data = {
         "verification_code": code,
         "site_url": tk.config["ckan.site_url"],

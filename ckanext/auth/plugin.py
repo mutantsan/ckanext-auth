@@ -4,6 +4,7 @@ import logging
 from typing import Any
 from datetime import timedelta
 
+from ckan.cli import user
 import ckan.model as model
 import ckan.plugins as plugins
 import ckan.plugins.toolkit as tk
@@ -37,13 +38,11 @@ class AuthPlugin(plugins.SingletonPlugin):
     # IAuthenticator
 
     def login(self):
-        extra_vars: dict[str, Any] = {}
-
         if tk.current_user.is_authenticated:
-            return tk.render("user/logout_first.html", extra_vars)
+            return tk.render("user/logout_first.html", {})
 
         if tk.request.method != "POST":
-            return tk.render("user/login.html", extra_vars)
+            return tk.render("user/login.html", {})
 
         user_obj = authenticate(
             {
@@ -54,7 +53,7 @@ class AuthPlugin(plugins.SingletonPlugin):
 
         if not user_obj:
             tk.h.flash_error(tk._("Login failed. Bad username or password."))
-            return tk.render("user/login.html", extra_vars)
+            return tk.render("user/login.html", {})
 
         if remember := tk.request.form.get("remember"):
             tk.login_user(
@@ -115,12 +114,12 @@ def authenticate_totp(user_name: str) -> str | None:
         return log.info("2FA: Could not get MFA credentials from a request")
 
     try:
-        user_secret.check_code(tk.request.form["code"])
+        result = user_secret.check_code(tk.request.form["code"])
     except ReplayAttackException as e:
         return log.warning(
             "2FA: Detected a possible replay attack for user: %s, context: %s",
             user_name,
             e,
         )
-
-    return user_name
+    else:
+        return user_name if result else None
