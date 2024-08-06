@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
+from typing import cast
 
 from flask import Blueprint, request, jsonify, Response
 from flask.views import MethodView
@@ -89,11 +90,11 @@ class Configure2FA(MethodView):
         if not user_secret:
             return extra_vars
 
-        mfa_test_code = payload.get("mfa")
+        test_code = cast(str, payload.get("code"))
 
-        if request.method == "POST" and mfa_test_code:
+        if request.method == "POST" and test_code:
             extra_vars["mfa_test_valid"] = user_secret.check_code(
-                mfa_test_code, verify_only=True
+                test_code, verify_only=True
             )
 
         return {
@@ -113,6 +114,8 @@ def regenerate_secret(user_id: str):
 @auth.route("/send_verification_code", methods=["POST"])
 def send_verification_code() -> Response:
     user_name: str = tk.get_or_bust(dict(tk.request.form), "login")
+
+    utils.regenerate_user_secret(user_name)
     success = utils.send_verification_email_to_user(user_name)
 
     return jsonify(

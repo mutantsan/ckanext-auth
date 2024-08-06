@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import json
-
 from ckanext.auth import config as auth_config
 
 

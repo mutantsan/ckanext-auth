@@ -14,66 +14,178 @@ ckan.module("auth-login-form", function () {
                 return;
             }
 
-            this.form = this.el;
-            this.nextBtn = this.form.find("button[type='submit']");
-            this.submitBtn = this.form.find("#mfa-submit");
-            this.loginForm = $("#login-form");
-            this.mfaForm = $("#mfa-form");
+            this.isEmailMfa = this.options.mfaMethod === "email";
+            this.resendDisabled = false;
             this.mfaEmailSent = false;
 
+            this.form = this.el;
+            this.nextBtn = $("#mfa-next");
+            this.submitBtn = this.form.find("#mfa-submit");
+            this.loginForm = $("#login-form");
+            this.resendCodeBtn = $("#resend-mfa");
+            this.mfaForm = $("#mfa-form");
+            this.errorContainer = $("#error-container");
+
             // Bind events
-            this.nextBtn.on("click", this._onNextBtnClick);
+            this.form.on("submit", this._onFormSubmit);
             this.submitBtn.on("click", this._onSubmitBtnClick);
+            this.resendCodeBtn.on("click", this._onResendCodeClick);
         },
 
-        _onNextBtnClick: function (e) {
+        _onFormSubmit: function (e) {
             e.preventDefault();
 
-            this.submitBtn.prop("disabled", true);
+            this.nextBtn.prop("disabled", true);
+
+            $.ajax({
+                url: "/api/action/auth_2fa_check_credentials",
+                method: "POST",
+                data: this.form.serialize(),
+                success: (resp) => {
+                    if (resp.result.success) {
+                        this._initMfaForm();
+                    } else {
+                        this._showError(resp.result.error);
+                    }
+                },
+                error: (resp) => {
+                    console.error(resp);
+                },
+                complete: () => {
+                    this.nextBtn.prop("disabled", false);
+                }
+            });
+        },
+
+        _initMfaForm: function () {
+            this.errorContainer.hide();
             this.loginForm.hide();
             this.mfaForm.show();
 
-            if (this.mfaForm.is(":visible")) {
-                const url = this.options.mfaMethod === "email"
-                    ? "/mfa/send_verification_code"
-                    : "/mfa/init_qr_code";
+            if (this.isEmailMfa) {
+                this._sendVerificationCode();
+            } else {
+                this._initQrCode();
+            };
+        },
 
-                $.ajax({
-                    url: url,
-                    method: "POST",
-                    data: this.form.serialize(),
-                    success: this._onSuccessRequest,
-                    error: this._onErrorRequest,
-                    complete: () => {
-                        this.submitBtn.prop("disabled", false);
-                    }
-                });
+        _setResendCountdown: function () {
+            let countdownTime = 120; // 2 minutes
+            let counterSpan = this.resendCodeBtn.find("span");
+
+            this.resendDisabled = true;
+            this.resendCodeBtn.prop("disabled", true);
+
+            const countdownInterval = setInterval(() => {
+                if (countdownTime <= 0) {
+                    clearInterval(countdownInterval);
+                    this.resendCodeBtn.prop("disabled", false);
+                    counterSpan.text("");
+                    this.resendDisabled = false;
+                } else {
+                    const minutes = Math.floor(countdownTime / 60);
+                    const seconds = countdownTime % 60;
+                    counterSpan.text(`(${minutes}:${seconds < 10 ? '0' : ''}${seconds})`);
+                    countdownTime--;
+                }
+            }, 1000);
+        },
+
+        _onResendCodeClick: function (e) {
+            e.preventDefault();
+
+            if (this.resendDisabled || !this.mfaEmailSent) {
+                return;
             }
+
+            this._sendVerificationCode();
         },
 
-        _onSuccessRequest: function (data) {
-            this.mfaEmailSent = true;
+        _sendVerificationCode: function () {
+            $.ajax({
+                url: "/mfa/send_verification_code",
+                method: "POST",
+                data: this.form.serialize(),
+                success: (_) => {
+                    this.errorContainer.hide();
+                    this.mfaEmailSent = true;
+
+                    this._setResendCountdown();
+                },
+                error: (resp) => {
+                    console.error(resp);
+                },
+                complete: () => {
+                    this.submitBtn.prop("disabled", false);
+                }
+            });
         },
 
-        _onErrorRequest: function (data) {
-            console.error(data);
+
+        _initQrCode: function () {
+            $.ajax({
+                url: "/mfa/init_qr_code",
+                method: "POST",
+                data: this.form.serialize(),
+                success: (resp) => {
+                    this.errorContainer.hide();
+                    this.mfaForm.find("#qr-code").attr("src", resp.result.qr_code);
+                },
+                error: (resp) => {
+                    console.error(resp);
+                },
+                complete: () => {
+                    this.submitBtn.prop("disabled", false);
+                }
+            });
         },
 
+        /**
+         * This function will actually submit the form and login the user
+         * if the verification is successful.
+         *
+         * There's an additional authentication check on the backend,
+         * in case if the user is trying to bypass the front end verification
+         * and submit the form without the verification code.
+         *
+         * @param {Event} e - Event object
+         */
         _onSubmitBtnClick: function (e) {
             e.preventDefault();
 
             this.submitBtn.prop("disabled", true);
 
             $.ajax({
-                url: this.sandbox.url("/api/action/auth_2fa_validate_code"),
+                url: this.sandbox.url("/api/action/auth_2fa_user_login"),
                 method: "POST",
                 data: this.form.serialize(),
-                success: this._onSuccessRequest,
-                error: this._onErrorRequest,
+                success: (resp) => {
+                    if (!resp.result.success) {
+                        return this._showError(resp.result.error);
+                    }
+
+                    if (this.isEmailMfa && resp.result.result.valid) {
+                        this.form.off("submit", this._onFormSubmit);
+                        this.form.submit();
+                    }
+                },
+                error: (resp) => {
+                    console.error(resp);
+                },
                 complete: () => {
                     this.submitBtn.prop("disabled", false);
                 }
             });
-        }
+        },
+
+        /**
+         * Show error message to the user.
+         *
+         * @param {String} message - Error message
+         */
+        _showError: function (message) {
+            this.errorContainer.find("#error-message").text(message);
+            this.errorContainer.show();
+        },
     }
 })

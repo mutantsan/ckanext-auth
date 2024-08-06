@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            {{ form.input('mfa', id='field-mfa', label=_('2FA Code'), placeholder=_('eg. 203812'), value="", error=not mfa_test_valid, classes=['control-full', 'control-large'], attrs={'class': 'form-control', 'autocomplete': 'off'}) }}
+            {{ form.input('code', id='field-code', label=_('2FA Code'), placeholder=_('eg. 203812'), value="", error=not mfa_test_valid, classes=['control-full', 'control-large'], attrs={'class': 'form-control', 'autocomplete': 'off'}) }}
         </fieldset>
 
         <div class="form-actions">

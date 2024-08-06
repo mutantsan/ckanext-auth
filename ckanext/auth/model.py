@@ -13,8 +13,8 @@ import ckan.model as model
 import ckan.plugins.toolkit as tk
 from ckan.model.types import make_uuid
 
+import ckanext.auth.config as auth_config
 from ckanext.auth.exceptions import ReplayAttackException
-
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +80,10 @@ class UserSecret(tk.BaseModel):
 
     def get_code(self) -> str:
         """Get the current code for the secret"""
-        return pyotp.TOTP(cast(str, self.secret), interval=600).now()
+        return pyotp.TOTP(
+            cast(str, self.secret),
+            interval=auth_config.get_2fa_email_interval(),
+        ).now()
 
     def check_code(self, code: str, verify_only=False):
         """Check the code against the secret
@@ -95,9 +98,16 @@ class UserSecret(tk.BaseModel):
         Returns:
             bool: True if the code is valid, False otherwise
         """
-        totp = pyotp.TOTP(cast(str, self.secret))
+        if auth_config.is_totp_2fa_enabled():
+            totp = pyotp.TOTP(cast(str, self.secret))
+            result = totp.verify(code, valid_window=1)
+        else:
+            totp = pyotp.TOTP(
+                cast(str, self.secret), interval=auth_config.get_2fa_email_interval()
+            )
+            result = totp.verify(code)
 
-        result = totp.verify(code, valid_window=1)
+        log.debug(result)
 
         if result and not verify_only:
             # check for replay attack...

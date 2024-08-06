@@ -9,3 +9,15 @@ groups:
       - key: ckanext.auth.2fa_method
         default: email
         description: The method to use for two-factor authentication. Options are email or auth_app.
+
+      - key: ckanext.auth.2fa_email_interval
+        default: 600
+        description: TTL for the authentication code sent via email in seconds. Default is 10 minutes.
+
+      - key: ckanext.auth.2fa_login_timeout
+        default: 900
+        description: Login timeout in seconds after N failed attempted. Default is 15 minutes.
+
+      - key: ckanext.auth.2fa_login_max_attempts
+        default: 10
+        description: Number of failed login attempts before the login timeout is triggered.
