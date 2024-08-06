@@ -29,14 +29,14 @@ To install ckanext-auth:
 
 1. Activate your CKAN virtual environment, for example:
 
-     . /usr/lib/ckan/default/bin/activate
+        . /usr/lib/ckan/default/bin/activate
 
 2. Clone the source and install it on the virtualenv
 
-    git clone https://github.com//ckanext-auth.git
-    cd ckanext-auth
-    pip install -e .
-	pip install -r requirements.txt
+        git clone https://github.com//ckanext-auth.git
+        cd ckanext-auth
+        pip install -e .
+        pip install -r requirements.txt
 
 3. Add `auth` to the `ckan.plugins` setting in your CKAN
    config file (by default the config file is located at
@@ -44,7 +44,7 @@ To install ckanext-auth:
 
 4. Restart CKAN. For example if you've deployed CKAN with Apache on Ubuntu:
 
-     sudo service apache2 reload
+        sudo service apache2 reload
 
 
 ## Config settings
