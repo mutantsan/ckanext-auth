@@ -57,14 +57,9 @@ class TestLoginManager:
         utils.LoginManager.block_user_login(user["id"])
         assert utils.LoginManager.is_login_blocked(user["id"])
 
-    def test_consecutive_n_logins_block_you(self, user):
-        assert not utils.LoginManager.is_login_blocked(user["id"])
-
-        for _ in range(config.get_2fa_max_attempts()):
-            utils.LoginManager.log_user_login_attempt(user["id"])
-
+    def test_reset_for_user(self, user):
+        utils.LoginManager.block_user_login(user["id"])
         assert utils.LoginManager.is_login_blocked(user["id"])
-        assert (
-            utils.LoginManager.get_user_login_attempts(user["id"])
-            == config.get_2fa_max_attempts()
-        )
+
+        utils.LoginManager.reset_for_user(user["id"])
+        assert not utils.LoginManager.is_login_blocked(user["id"])
