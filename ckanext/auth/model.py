@@ -109,8 +109,9 @@ class UserSecret(tk.BaseModel):
 
         if result and not verify_only:
             # check for replay attack...
-            if self.last_access and totp.at(cast(dt, self.last_access)) == code:
-                raise ReplayAttackException("The code has already been used")
+            # TODO: we will rewrite this code when the totp method will be implemented
+            # if self.last_access and totp.at(cast(dt, self.last_access)) == code:
+            #     raise ReplayAttackException("The code has already been used")
 
             self.last_access = dt.now(tz.utc)
             model.Session.commit()
