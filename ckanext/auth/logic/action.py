@@ -30,27 +30,9 @@ def auth_2fa_user_login(
 
     user = model.User.by_name(data_dict["login"])
 
-    if (
-        not user
-        or not user.is_active
-        or not user.validate_password(data_dict["password"])
-    ):
-        log.info("2FA: Login failed for %s", data_dict["login"])
-        return LoginResponse(
-            success=False,
-            error=tk._("Invalid login or password"),
-            result=None,
-        )
+    if not user:
+        raise tk.ObjectNotFound("User not found")
 
-    if utils.LoginManager.is_login_blocked(data_dict["login"]):
-        log.info("2FA: User %s is blocked from logging in", data_dict["login"])
-        return LoginResponse(
-            success=False,
-            error=tk._("Too many login attempts"),
-            result=None,
-        )
-
-    utils.LoginManager.log_user_login_attempt(data_dict["login"])
     user_secret = UserSecret.get_for_user(user.name)
 
     if not user_secret:
@@ -126,6 +108,15 @@ def auth_2fa_check_credentials(
         or not user.validate_password(data_dict["password"])
     ):
         log.info("2FA: Login failed for %s", data_dict["login"])
+
+        utils.LoginManager.log_user_login_attempt(data_dict["login"])
+
+        if (
+            utils.LoginManager.get_user_login_attempts(data_dict["login"])
+            > auth_config.get_2fa_max_attempts()
+        ):
+            utils.LoginManager.block_user_login(data_dict["login"])
+
         return LoginResponse(
             success=False,
             error=tk._("Invalid login or password"),

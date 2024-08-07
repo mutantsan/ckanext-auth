@@ -28,3 +28,8 @@ def reset_secret(username):
 @click.argument("username")
 def unblock_user(username):
     utils.LoginManager.reset_for_user(username)
+
+
+@auth.command()
+def unblock_all():
+    utils.LoginManager.reset_all()

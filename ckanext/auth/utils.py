@@ -114,13 +114,9 @@ class LoginManager:
     @classmethod
     def log_user_login_attempt(cls, user_id: str) -> None:
         """Log a login attempt for a user."""
-        conn = connect_to_redis()
+        redis = connect_to_redis()
 
-        attempts = conn.incr(cls.login_attempts_key.format(user_id))
-
-        if attempts >= auth_config.get_2fa_max_attempts():
-            cls.block_user_login(user_id)
-            return
+        redis.incr(cls.login_attempts_key.format(user_id))
 
     @classmethod
     def get_user_login_attempts(cls, user_id: str) -> int:
@@ -132,5 +128,20 @@ class LoginManager:
         """Reset the login attempts for a user."""
         log.info("2FA: Resetting login attempts for user %s", user_id)
 
-        connect_to_redis().delete(cls.login_attempts_key.format(user_id))
-        connect_to_redis().delete(cls.blocked_key.format(user_id))
+        redis = connect_to_redis()
+
+        redis.delete(cls.login_attempts_key.format(user_id))
+        redis.delete(cls.blocked_key.format(user_id))
+
+    @classmethod
+    def reset_all(cls) -> None:
+        """Reset the login attempts for all users."""
+        log.info("2FA: Resetting login attempts for all users")
+
+        redis = connect_to_redis()
+
+        for key in redis.keys(cls.login_attempts_key.format("*")):
+            redis.delete(key)
+
+        for key in redis.keys(cls.blocked_key.format("*")):
+            redis.delete(key)

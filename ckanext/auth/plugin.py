@@ -80,6 +80,12 @@ def authenticate(identity: dict[str, str]) -> model.User | None:
     if utils.LoginManager.is_login_blocked(identity["login"]):
         return None
 
+    if (
+        utils.LoginManager.get_user_login_attempts(identity["login"])
+        > config.get_2fa_max_attempts()
+    ):
+        utils.LoginManager.block_user_login(identity["login"])
+
     if not ckan_auth_result:
         return utils.LoginManager.log_user_login_attempt(identity["login"])
 
@@ -90,11 +96,13 @@ def authenticate(identity: dict[str, str]) -> model.User | None:
     # if the CKAN authenticator has successfully authenticated
     # then check the TOTP parameter to see if it is valid
     if authenticate_totp(identity["login"]):
+        utils.LoginManager.reset_for_user(identity["login"])
         return ckan_auth_result
 
     # This means that the login form has been submitted
     # with an invalid TOTP code, bypassing the ajax
-    # login() workflow in utils.login.
+    # login workflow.
+
     # The username and password were fine, but the 2fa
     # code was missing or invalid
     return None
