@@ -7,6 +7,7 @@ import ckan.model as model
 import ckan.plugins.toolkit as tk
 from ckan import types
 from ckan.logic import validate
+import ckan.lib.captcha as captcha
 
 import ckanext.auth.utils as utils
 import ckanext.auth.config as auth_config
@@ -101,6 +102,16 @@ def auth_2fa_check_credentials(
     tk.check_access("auth_2fa_user_login", context, data_dict)
 
     user = model.User.by_name(data_dict["login"])
+
+    try:
+        captcha.check_recaptcha(tk.request)
+    except captcha.CaptchaError:
+        log.info("2FA: Login failed for %s", data_dict["login"])
+        return LoginResponse(
+            success=False,
+            error=tk._("Invalid reCAPTCHA"),
+            result=None,
+        )
 
     if (
         not user
