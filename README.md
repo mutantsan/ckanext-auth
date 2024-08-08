@@ -8,9 +8,6 @@ There are two methods of 2FA available:
 - TOTP (Time-based One-Time Password) with authenticator apps like Google Authenticator, Authy, etc.
 - Email
 
-TODO:
-- Finish the TOTP method implementation
-
 
 ## Requirements
 
@@ -61,7 +58,7 @@ There are several configuration settings available for this extension:
 
     - key: ckanext.auth.2fa_method
       default: email
-      description: The method to use for two-factor authentication. Options are email or auth_app.
+      description: The method to use for two-factor authentication. Options are email or authenticator.
 
     - key: ckanext.auth.2fa_email_interval
       default: 600

@@ -11,7 +11,7 @@ groups:
       - key: ckanext.auth.2fa_method
         default: email
         editable: true
-        description: The method to use for two-factor authentication. Options are email or auth_app.
+        description: The method to use for two-factor authentication. Options are email or authenticator.
 
       - key: ckanext.auth.2fa_email_interval
         default: 600
