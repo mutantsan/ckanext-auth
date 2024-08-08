@@ -54,29 +54,31 @@ To install ckanext-auth:
 
 There are several configuration settings available for this extension:
 
-      - key: ckanext.auth.2fa_enabled
-        default: true
-        type: bool
-        description: Enable two-factor authentication for users
+    - key: ckanext.auth.2fa_enabled
+      default: true
+      type: bool
+      description: Enable two-factor authentication for users
 
-      - key: ckanext.auth.2fa_method
-        default: email
-        description: The method to use for two-factor authentication. Options are email or auth_app.
+    - key: ckanext.auth.2fa_method
+      default: email
+      description: The method to use for two-factor authentication. Options are email or auth_app.
 
-      - key: ckanext.auth.2fa_email_interval
-        default: 600
-        type: int
-        description: TTL for the authentication code sent via email in seconds. Default is 10 minutes.
+    - key: ckanext.auth.2fa_email_interval
+      default: 600
+      type: int
+      description: TTL for the authentication code sent via email in seconds. Default is 10 minutes.
 
-      - key: ckanext.auth.2fa_login_timeout
-        default: 900
-        type: int
-        description: Login timeout in seconds after N failed attempted. Default is 15 minutes.
+    - key: ckanext.auth.2fa_login_timeout
+      default: 900
+      type: int
+      description: Login timeout in seconds after N failed attempted. Default is 15 minutes.
 
-      - key: ckanext.auth.2fa_login_max_attempts
-        default: 10
-        type: int
-        description: Number of failed login attempts before the login timeout is triggered.
+    - key: ckanext.auth.2fa_login_max_attempts
+      default: 10
+      type: int
+      description: Number of failed login attempts before the login timeout is triggered.
+
+If you have the [ckanext-admin-panel](https://github.com/mutantsan/ckanext-admin-panel) installed, the configuration settings will be available in the admin panel too.
 
 ## How to
 
