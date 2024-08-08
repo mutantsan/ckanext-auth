@@ -78,6 +78,9 @@ There are several configuration settings available for this extension:
         type: int
         description: Number of failed login attempts before the login timeout is triggered.
 
+## How to
+
+- If you want to change the email for email 2FA, you can do it by creating a new template file at `auth/emails/verification_code.html`.
 
 ## Tests
 
