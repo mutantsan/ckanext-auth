@@ -1,0 +1,23 @@
+<div id="mfa-form" style="display: none;">
+    <p>{{ _("We've just sent a verification code to your email.") }}</p>
+
+    <div class="form-group control-medium">
+        <label class="form-label" for="field-code">{{ _("Verification code") }}</label>
+        <div class="controls ">
+            <input id="code" type="text" name="code" autocomplete="off" class="form-control">
+        </div>
+    </div>
+
+    <p>{{ _("Didn't get it?") }}
+        <button id="resend-mfa" class="btn btn-default mx-2" type="button">
+            {{ _("Resend code") }}
+            <span class="counter"></span>
+        </button>
+    </p>
+
+    <div class="form-actions">
+        {# todo: add help link #}
+        {# <a id="mfa-help-link" href="/" style="display: none; margin-right: 20px;">{{_('Need help?')}}</a> #}
+        <button class="btn btn-primary" id="mfa-submit">{{ _('Submit') }}</button>
+    </div>
+</div>

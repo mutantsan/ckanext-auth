@@ -63,7 +63,7 @@ class Configure2FA(MethodView):
     def post(self, user_id: str):
         extra_vars = self._setup_totp_extra_vars(user_id)
 
-        if extra_vars.get("mfa_test_valid"):
+        if extra_vars.get("code_valid"):
             tk.h.flash_success(
                 tk._(
                     """
@@ -75,32 +75,33 @@ class Configure2FA(MethodView):
             tk.h.flash_error(
                 tk._(
                     """The code is incorrect. Please try scanning
-                    the QR code with your authenticator app again."""
+                the QR code with your authenticator app again."""
                 )
             )
 
         return tk.redirect_to("auth.configure_2fa", user_id=user_id)
 
     def _setup_totp_extra_vars(self, user_id: str):
-        payload = parse_params(tk.request.form)
-        extra_vars = {}
+        data_dict = parse_params(tk.request.form)
 
         user_secret = UserSecret.get_for_user(user_id)
 
         if not user_secret:
-            return extra_vars
+            return {}
 
-        test_code = cast(str, payload.get("code"))
+        test_code = cast(str, data_dict.get("code"))
+
+        extra_vars = {
+            "totp_secret": user_secret.secret,
+            "provisioning_uri": user_secret.provisioning_uri,
+        }
 
         if request.method == "POST" and test_code:
-            extra_vars["mfa_test_valid"] = user_secret.check_code(
+            extra_vars["code_valid"] = user_secret.check_code(
                 test_code, verify_only=True
             )
 
-        return {
-            "totp_secret": user_secret.secret,
-            "totp_challenger_uri": user_secret.provisioning_uri,
-        }
+        return extra_vars
 
 
 @auth.route("/configure_mfa/<user_id>/new", methods=["GET", "POST"])
@@ -127,33 +128,36 @@ def send_verification_code() -> Response:
     )
 
 
+@auth.route("/init_qr_code", methods=["POST"])
+def init_qr_code() -> Response:
+    user_name: str = tk.get_or_bust(dict(tk.request.form), "login")
+
+    secret = UserSecret.get_for_user(user_name)
+
+    if not secret:
+        secret = UserSecret.create_for_user(user_name)
+
+    return jsonify(
+        {
+            "success": True,
+            "error": None,
+            "result": {
+                "accessed": bool(secret.last_access),
+                "provisioning_uri": secret.provisioning_uri,
+                "secret": secret.secret,
+            },
+        }
+    )
+
+
 if plugin_loaded("admin_panel"):
     from ckanext.ap_main.utils import ap_before_request
     from ckanext.ap_main.views.generics import ApConfigurationPageView
 
-    charts_admin = Blueprint("auth_admin", __name__)
-    charts_admin.before_request(ap_before_request)
+    auth_admin = Blueprint("auth_admin", __name__)
+    auth_admin.before_request(ap_before_request)
 
-    # class ConfigClearCacheView(MethodView):
-    #     def post(self):
-    #         if "invalidate-all-cache" in tk.request.form:
-    #             cache.invalidate_all_cache()
-
-    #         if "invalidate-redis-cache" in tk.request.form:
-    #             cache.drop_redis_cache()
-
-    #         if "invalidate-file-cache" in tk.request.form:
-    #             cache.drop_file_cache()
-
-    #         tk.h.flash_success(tk._("Cache has been cleared"))
-
-    #         return tk.h.redirect_to("charts_view_admin.config")
-
-    # charts_admin.add_url_rule(
-    #     "/admin-panel/charts/clear-cache",
-    #     view_func=ConfigClearCacheView.as_view("clear_cache"),
-    # )
-    charts_admin.add_url_rule(
+    auth_admin.add_url_rule(
         "/admin-panel/auth/config",
         view_func=ApConfigurationPageView.as_view(
             "config",

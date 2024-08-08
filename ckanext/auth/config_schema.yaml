@@ -17,13 +17,13 @@ fields:
   - field_name: ckanext.auth.2fa_method
     label: Two-factor authentication method
     help_text: The method to use for two-factor authentication
-    validators: default(email), one_of([email, auth_app])
+    validators: default(email), one_of([email, authenticator])
     preset: select
     required: true
     choices:
       - value: email
         label: Email
-      - value: auth_app
+      - value: authenticator
         label: Authenticator app
 
   - field_name: ckanext.auth.2fa_email_interval

@@ -1,0 +1,18 @@
+<div id="mfa-form" style="display: none;">
+    {% snippet "auth/snippets/2fa_qr_code.html" %}
+
+    <p class="my-3">{{_('Please enter your authenticator app generated 6-digit verification code.')}}</p>
+
+    <div class="form-group control-medium">
+        <label class="form-label" for="field-code">{{ _("Verification code") }}</label>
+        <div class="controls ">
+            <input id="code" type="text" name="code" autocomplete="off" class="form-control">
+        </div>
+    </div>
+
+    <div class="form-actions">
+        {# todo: add help link #}
+        {# <a id="mfa-help-link" href="/" style="display: none; margin-right: 20px;">{{_('Need help?')}}</a> #}
+        <button class="btn btn-primary" id="mfa-submit">{{ _('Submit') }}</button>
+    </div>
+</div>

@@ -4,7 +4,8 @@ ckan.module("auth-login-form", function () {
     return {
         options: {
             enabled: true,
-            mfaMethod: null
+            mfaMethod: null,
+            qrCodeSize: 300,
         },
 
         initialize() {
@@ -15,6 +16,7 @@ ckan.module("auth-login-form", function () {
             }
 
             this.isEmailMfa = this.options.mfaMethod === "email";
+            this.isTOTPMfa = !this.isEmailMfa;
             this.resendDisabled = false;
             this.mfaEmailSent = false;
 
@@ -24,7 +26,8 @@ ckan.module("auth-login-form", function () {
             this.loginForm = $("#login-form");
             this.resendCodeBtn = $("#resend-mfa");
             this.mfaForm = $("#mfa-form");
-            this.errorContainer = $("#error-container");
+            this.mfaSetup = $("#mfa-qr-code");
+            this.errorContainer = $("#mfa-error-container");
 
             // Bind events
             this.form.on("submit", this._onFormSubmit);
@@ -129,7 +132,18 @@ ckan.module("auth-login-form", function () {
                 data: this.form.serialize(),
                 success: (resp) => {
                     this.errorContainer.hide();
-                    this.mfaForm.find("#qr-code").attr("src", resp.result.qr_code);
+
+                    if (!resp.result.accessed) {
+                        this.mfaSetup.show();
+
+                        new QRious({
+                            element: document.getElementById("mfa-qr-code-container"),
+                            size: this.options.qrCodeSize,
+                            value: resp.result.provisioning_uri
+                        })
+
+                        $("#mfa-secret").text(resp.result.secret);
+                    };
                 },
                 error: (resp) => {
                     console.error(resp);
@@ -164,10 +178,10 @@ ckan.module("auth-login-form", function () {
                         return this._showError(resp.result.error);
                     }
 
-                    if (this.isEmailMfa && resp.result.result.valid) {
+                    if (resp.result.valid) {
                         this.form.off("submit", this._onFormSubmit);
                         this.form.submit();
-                    }
+                    };
                 },
                 error: (resp) => {
                     console.error(resp);
@@ -184,7 +198,7 @@ ckan.module("auth-login-form", function () {
          * @param {String} message - Error message
          */
         _showError: function (message) {
-            this.errorContainer.find("#error-message").text(message);
+            this.errorContainer.find(".mfa-error-message").text(message);
             this.errorContainer.show();
         },
     }

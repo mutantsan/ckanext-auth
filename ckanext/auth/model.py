@@ -98,8 +98,12 @@ class UserSecret(tk.BaseModel):
         Returns:
             bool: True if the code is valid, False otherwise
         """
-        if auth_config.is_totp_2fa_enabled():
+        is_totp_enabled = auth_config.is_totp_2fa_enabled()
+
+        if is_totp_enabled:
             totp = pyotp.TOTP(cast(str, self.secret))
+            # valid_window – extends the validity to this many counter ticks
+            # before and after the current one
             result = totp.verify(code, valid_window=1)
         else:
             totp = pyotp.TOTP(
@@ -110,8 +114,12 @@ class UserSecret(tk.BaseModel):
         if result and not verify_only:
             # check for replay attack...
             # TODO: we will rewrite this code when the totp method will be implemented
-            # if self.last_access and totp.at(cast(dt, self.last_access)) == code:
-            #     raise ReplayAttackException("The code has already been used")
+            if (
+                is_totp_enabled
+                and self.last_access
+                and totp.at(cast(dt, self.last_access)) == code
+            ):
+                raise ReplayAttackException("The code has already been used")
 
             self.last_access = dt.now(tz.utc)
             model.Session.commit()
@@ -131,11 +139,11 @@ class UserSecret(tk.BaseModel):
 
         if user is None:
             raise ValueError(
-                "No user found for SecurityTOTP instance with user_id {}".format(
+                "No user found for UserSecret instance with user_id {}".format(
                     self.user_id
                 )
             )
 
-        return pyotp.TOTP(self.secret).provisioning_uri(
+        return pyotp.TOTP(cast(str, self.secret)).provisioning_uri(
             user.name, issuer_name=tk.config["ckan.site_url"]
         )
