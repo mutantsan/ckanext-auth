@@ -9,7 +9,7 @@ from flask.views import MethodView
 
 import ckan.types as types
 from ckan.lib import helpers
-from ckan.plugins import toolkit as tk
+from ckan.plugins import toolkit as tk, plugin_loaded
 from ckan.logic import parse_params
 
 from ckanext.auth import utils
@@ -124,6 +124,42 @@ def send_verification_code() -> Response:
             "error": "Failed to send verification code" if not success else None,
             "result": None,
         }
+    )
+
+
+if plugin_loaded("admin_panel"):
+    from ckanext.ap_main.utils import ap_before_request
+    from ckanext.ap_main.views.generics import ApConfigurationPageView
+
+    charts_admin = Blueprint("auth_admin", __name__)
+    charts_admin.before_request(ap_before_request)
+
+    # class ConfigClearCacheView(MethodView):
+    #     def post(self):
+    #         if "invalidate-all-cache" in tk.request.form:
+    #             cache.invalidate_all_cache()
+
+    #         if "invalidate-redis-cache" in tk.request.form:
+    #             cache.drop_redis_cache()
+
+    #         if "invalidate-file-cache" in tk.request.form:
+    #             cache.drop_file_cache()
+
+    #         tk.h.flash_success(tk._("Cache has been cleared"))
+
+    #         return tk.h.redirect_to("charts_view_admin.config")
+
+    # charts_admin.add_url_rule(
+    #     "/admin-panel/charts/clear-cache",
+    #     view_func=ConfigClearCacheView.as_view("clear_cache"),
+    # )
+    charts_admin.add_url_rule(
+        "/admin-panel/auth/config",
+        view_func=ApConfigurationPageView.as_view(
+            "config",
+            "ckanext_auth_config",
+            page_title=tk._("Auth config"),
+        ),
     )
 
 

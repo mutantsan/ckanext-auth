@@ -1,0 +1,45 @@
+scheming_version: 2
+schema_id: ckanext_auth_config
+
+fields:
+  - field_name: ckanext.auth.2fa_enabled
+    label: Enable two-factor authentication
+    help_text: Enable two-factor authentication for users
+    validators: default(true), one_of([true, false])
+    preset: select
+    required: true
+    choices:
+      - value: true
+        label: Enable
+      - value: false
+        label: Disable
+
+  - field_name: ckanext.auth.2fa_method
+    label: Two-factor authentication method
+    help_text: The method to use for two-factor authentication
+    validators: default(email), one_of([email, auth_app])
+    preset: select
+    required: true
+    choices:
+      - value: email
+        label: Email
+      - value: auth_app
+        label: Authenticator app
+
+  - field_name: ckanext.auth.2fa_email_interval
+    label: Email authentication code TTL
+    help_text: TTL for the authentication code sent via email in seconds
+    validators: default(600) int_validator
+    input_type: number
+
+  - field_name: ckanext.auth.2fa_login_timeout
+    label: Login timeout
+    help_text: Login timeout in seconds after N failed attempted. Default is 15 minutes.
+    validators: default(900) int_validator
+    input_type: number
+
+  - field_name: ckanext.auth.2fa_login_max_attempts
+    label: Maximum login attempts
+    help_text: Number of failed login attempts before the login timeout is triggered
+    validators: default(10) int_validator
+    input_type: number
