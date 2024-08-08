@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from typing import cast
+from urllib import parse
+
 import pytest
 
 import ckan.plugins.toolkit as tk
-from ckan.tests.helpers import call_action
 
 from ckanext.auth.model import UserSecret
 
@@ -32,3 +34,49 @@ class TestUserSecretModel:
         old_secret = secret.secret
         secret = UserSecret.create_for_user(user["name"])
         assert secret.secret != old_secret
+
+    def test_create_for_missing_user(self):
+        with pytest.raises(tk.ObjectNotFound):
+            UserSecret.create_for_user("missing")
+
+    def test_get_code(self, user):
+        secret = UserSecret.create_for_user(user["name"])
+
+        code = secret.get_code()
+
+        assert code
+        assert len(code) == 6
+        assert code.isdigit()
+
+    def test_check_code(self, user):
+        secret = UserSecret.create_for_user(user["name"])
+        code = secret.get_code()
+
+        assert secret.check_code(code)
+        assert not secret.check_code("invalid")
+
+    def test_check_code_updated_last_access(self, user):
+        secret = UserSecret.create_for_user(user["name"])
+        code = secret.get_code()
+
+        assert not secret.last_access
+        secret.check_code(code)
+        assert secret.last_access
+
+    def test_check_code_verify_only_once(self, user):
+        """We use it for test verify on the user 2MA configure page"""
+        secret = UserSecret.create_for_user(user["name"])
+        code = secret.get_code()
+
+        assert not secret.last_access
+        assert secret.check_code(code, verify_only=True)
+        assert not secret.last_access
+
+    def test_provisioning_uri(self, user):
+        secret = UserSecret.create_for_user(user["name"])
+
+        assert secret.provisioning_uri
+        assert "otpauth://totp" in secret.provisioning_uri
+        assert user["name"] in secret.provisioning_uri
+        assert cast(str, secret.secret) in secret.provisioning_uri
+        assert parse.quote_plus(tk.config["ckan.site_url"]) in secret.provisioning_uri

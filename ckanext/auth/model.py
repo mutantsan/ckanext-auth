@@ -113,7 +113,6 @@ class UserSecret(tk.BaseModel):
 
         if result and not verify_only:
             # check for replay attack...
-            # TODO: we will rewrite this code when the totp method will be implemented
             if (
                 is_totp_enabled
                 and self.last_access

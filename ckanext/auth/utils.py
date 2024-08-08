@@ -62,7 +62,7 @@ class LoginManager:
     @classmethod
     def reset_for_user(cls, user_id: str) -> None:
         """Reset the login attempts for a user."""
-        log.info("2FA: Resetting login attempts for user %s", user_id)
+        log.debug("2FA: Resetting login attempts for user %s", user_id)
 
         redis = connect_to_redis()
 
@@ -72,7 +72,7 @@ class LoginManager:
     @classmethod
     def reset_all(cls) -> None:
         """Reset the login attempts for all users."""
-        log.info("2FA: Resetting login attempts for all users")
+        log.debug("2FA: Resetting login attempts for all users")
 
         redis = connect_to_redis()
 
@@ -155,7 +155,7 @@ def regenerate_user_secret(user_id: str) -> str:
 
     user_secret = UserSecret.create_for_user(user.name)
 
-    log.info("2FA: Rotated the 2fa secret for user %s", user_id)
+    log.debug("2FA: Rotated the 2fa secret for user %s", user_id)
 
     return cast(str, user_secret.secret)
 
@@ -237,12 +237,12 @@ def authenticate_totp(user_name: str) -> str | None:
     # if there is no totp configured, don't allow auth
     # shouldn't happen, login flow should create a user secret
     if not user_secret:
-        return log.info(
+        return log.debug(
             "2FA: Login attempted without MFA configured for: %s", user_name
         )
 
     if "code" not in tk.request.form:
-        return log.info("2FA: Could not get MFA credentials from a request")
+        return log.debug("2FA: Could not get MFA credentials from a request")
 
     try:
         result = user_secret.check_code(tk.request.form["code"])
