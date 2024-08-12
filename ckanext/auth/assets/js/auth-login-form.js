@@ -66,6 +66,7 @@ ckan.module("auth-login-form", function () {
             this.mfaForm.show();
 
             if (this.isEmailMfa) {
+                this._setResendCountdown();
                 this._sendVerificationCode();
             } else {
                 this._initQrCode();
@@ -112,8 +113,6 @@ ckan.module("auth-login-form", function () {
                 success: (_) => {
                     this.errorContainer.hide();
                     this.mfaEmailSent = true;
-
-                    this._setResendCountdown();
                 },
                 error: (resp) => {
                     console.error(resp);
