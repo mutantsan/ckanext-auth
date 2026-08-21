@@ -1,5 +1,14 @@
-<fieldset id="mfa-qr-code" {% if not totp_secret %}style="display: none;"{% endif %}>
-    <div class="auth-qr-code-container align-items-center d-flex gap-3">
+{# This is used via ajax prefill login if user has not setup 2fa as well as on manage 2fa via server side rendering #}
+{# totp_secret and provisioning_uri are only passed through jinja from manage 2fa, login uses ajax to prefill for 'fresh' users #}
+
+<fieldset id="mfa-qr-code" class="{% if not totp_secret %}hidden{% endif %}">
+    {% if totp_secret %}
+    {# Don't display secret when visiting manage page, user must interact with the view to not visually leak mfa token #}
+        <fieldset id="mfa-show-qr-code-fieldset" class="pb-3">
+            <button class="btn btn-primary" id="mfa-show-qr-code">{{ _('Display 2FA Code') }}</button>
+        </fieldset>
+    {% endif %}
+    <div id="mfa-qr-code-secret" class="auth-qr-code-container align-items-center d-flex gap-3 {% if totp_secret %}hidden{% endif %}">
         <canvas
             id="mfa-qr-code-container"
             class="radius-lg padding-sm margin-b-sm border-solid"
@@ -24,5 +33,12 @@
                 <input id="code" type="text" name="code" autocomplete="off" class="form-control">
             </div>
         </div>
+    {% else %}
+    <div>
+        {% trans %}You can add PassKeys once logged in via {% endtrans %}
+        <i class="fa fa-cog" aria-hidden="true"></i><span class="text"> <b>{{ _('Profile settings') }}</b>
+        {% trans %} then {% endtrans %}
+        <i class="fa fa-key"></i> {{ _('Manage Passkeys') }}</span>
+    </div>
     {% endif %}
 </fieldset>

@@ -25,10 +25,15 @@ ckan.module("auth-passkey-register", function ($, _) {
             this.errorEl.hide();
 
             try {
+                let csrf_field = $('meta[name=csrf_field_name]').attr('content');
+                let csrf_token = $('meta[name='+ csrf_field +']').attr('content');
                 const beginResp = await $.ajax({
-                    url: ckan.url("/passkey/register/begin"),
+                    url: ckan.url("/user/passkey/register/begin"),
                     method: "POST",
                     dataType: "json",
+                    headers: {
+                        'X-CSRFToken': csrf_token
+                    }
                 });
 
                 if (!beginResp.success) {
@@ -57,7 +62,7 @@ ckan.module("auth-passkey-register", function ($, _) {
                 const credential = await navigator.credentials.create({ publicKey: publicKeyOptions });
 
                 const completeResp = await $.ajax({
-                    url: ckan.url("/passkey/register/complete"),
+                    url: ckan.url("/user/passkey/register/complete"),
                     method: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({

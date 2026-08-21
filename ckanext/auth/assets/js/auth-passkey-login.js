@@ -23,7 +23,7 @@ ckan.module("auth-passkey-login", function ($, _) {
 
             try {
                 const beginResp = await $.ajax({
-                    url: ckan.url("/passkey/login/begin"),
+                    url: ckan.url("/user/passkey/login/begin"),
                     method: "POST",
                     dataType: "json",
                 });
@@ -47,7 +47,7 @@ ckan.module("auth-passkey-login", function ($, _) {
                 const credential = await navigator.credentials.get({ publicKey: publicKeyOptions });
 
                 const completeResp = await $.ajax({
-                    url: ckan.url("/passkey/login/complete"),
+                    url: ckan.url("/user/passkey/login/complete"),
                     method: "POST",
                     contentType: "application/json",
                     data: JSON.stringify({

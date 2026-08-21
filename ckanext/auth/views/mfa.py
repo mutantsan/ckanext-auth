@@ -16,7 +16,7 @@ from ckanext.auth import utils
 from ckanext.auth.model import UserSecret
 
 log = logging.getLogger(__name__)
-auth = Blueprint("auth", __name__, url_prefix="/mfa")
+auth = Blueprint("auth", __name__, url_prefix="/user/mfa")
 
 
 class Configure2FA(MethodView):
@@ -99,7 +99,7 @@ class Configure2FA(MethodView):
 @utils.require_login
 def regenerate_secret(user_id: str):
     utils.regenerate_user_secret(user_id)
-    tk.h.flash_success(tk._("Your 2FA secret has been regenerated."))
+    tk.h.flash_success(tk._("Your 2FA secret has been cleared and regenerated."))
     return tk.redirect_to("auth.configure_2fa", user_id=user_id)
 
 
@@ -129,14 +129,25 @@ def init_qr_code() -> Response:
     if not secret:
         secret = UserSecret.create_for_user(user_name)
 
+    if not bool(secret.last_access):
+        return jsonify(
+            {
+                "success": True,
+                "error": None,
+                "result": {
+                    "accessed": bool(secret.last_access),
+                    "provisioning_uri": secret.provisioning_uri,
+                    "secret": secret.secret,
+                },
+            },
+        )
+
     return jsonify(
         {
             "success": True,
             "error": None,
             "result": {
                 "accessed": bool(secret.last_access),
-                "provisioning_uri": secret.provisioning_uri,
-                "secret": secret.secret,
             },
         },
     )

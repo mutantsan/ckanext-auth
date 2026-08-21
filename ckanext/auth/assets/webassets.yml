@@ -9,6 +9,7 @@ auth-js:
     - js/auth-passkey-login.js
     - js/auth-passkey-register.js
     - js/auth-passkey-manage.js
+    - js/auth-2fa-manage.js
 
   extra:
     preload:

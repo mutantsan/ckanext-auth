@@ -24,7 +24,7 @@ ckan.module("auth-passkey-manage", function ($, _) {
 
             try {
                 const resp = await $.ajax({
-                    url: ckan.url("/passkey/" + passkeyId),
+                    url: ckan.url("/user/passkey/" + passkeyId),
                     method: "DELETE",
                     dataType: "json",
                 });

@@ -14,7 +14,7 @@ from ckanext.auth import utils
 from ckanext.auth.model import AuthPasskey
 
 log = logging.getLogger(__name__)
-passkey = Blueprint("auth_passkey", __name__, url_prefix="/passkey")
+passkey = Blueprint("auth_passkey", __name__, url_prefix="/user/passkey")
 
 
 @passkey.route("/register/begin", methods=["POST"])
@@ -92,7 +92,7 @@ def passkey_login_complete() -> Response:
         {
             "success": True,
             "error": None,
-            "result": {"next": tk.url_for("home.index")},
+            "result": {"next": tk.url_for(tk.config.get("ckan.route_after_login", "dashboard.index"))},
         }
     )
 

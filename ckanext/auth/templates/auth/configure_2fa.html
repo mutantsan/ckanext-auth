@@ -15,16 +15,16 @@
         <h2 class="module-heading"><i class="fa fa-info-circle"></i> {{ _('Manage 2FA') }}</h2>
         <div class="module-content">
             <p>
-                {{ _("Scan the image with the two factor authentication app on your phone.") }}
+                {{ _("Scan the image with the two-factor authentication app on your phone.") }}
             </p>
 
             <p>
                 <b>{{ _("Test") }}</b>:
-                {{ _("Enter the two factor authentication code from your app to test correct configuration.") }}
+                {{ _("Enter the two-factor authentication code from your app to test correct configuration.") }}
             </p>
             <p>
-                <b>{{ _("Regenerate secret") }}</b>:
-                {{ _("You might need it if you lost an access to your 2FA device or want to setup another one.") }}
+                <b>{{ _("Remove and generate new 2FA secret") }}</b>:
+                {{ _("If you lost access to your 2FA device or believe it has been compromised.") }}
             </p>
         </div>
     </section>
@@ -33,17 +33,25 @@
 {% block page_header %} {% endblock %}
 
 {% block primary_content_inner %}
-    <form id="mfa-form" method="POST">
+    <form id="mfa-form" method="POST" data-module="auth-2fa-manage">
         {{ h.csrf_input() }}
 
+        <div id="mfa-qr-display" class="hide">
         {% snippet "auth/snippets/2fa_qr_code.html", totp_secret=totp_secret, provisioning_uri=provisioning_uri %}
+        </div>
 
         <div class="form-actions">
             <a class="btn btn-default m-0 me-auto" href="{{ h.url_for('user.edit', id=user_dict.name) }}">{{ _("Back") }}</a>
 
+            {% if h.is_passkey_enabled() %}
+                <a href="{{ h.url_for('auth_passkey.passkeys', id=user_id )}}" class="btn btn-secondary">
+                    <i class="fa fa-key"></i> {{ _('Manage Passkeys') }}
+                </a>
+            {% endif %}
+
             <a class="btn btn-danger" href="{{ h.url_for('auth.regenerate_secret', user_id=user_id) }}" data-module="confirm-action"
-                data-module-i18n="{{ h.dump_json({'content': _('Are you sure you want to generate a new 2FA secret?')}) }}">
-                {{ _('Regenerate 2FA secret') }}
+                data-module-i18n="{{ h.dump_json({'content': _('Are you sure you want to remove the 2FA secret and generate a new one?')}) }}">
+                {{ _('Remove current 2FA secret') }}
             </a>
 
             <button class="btn btn-primary" type="submit">{{_('Test')}}</button>
